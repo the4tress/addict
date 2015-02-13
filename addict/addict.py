@@ -85,7 +85,9 @@ class Dict(dict):
         is a addict Dict. Recurses.
 
         """
-        if isinstance(item, dict):
+        if isinstance(item, Dict):
+            return item
+        elif isinstance(item, dict):
             return cls(item)
         elif isinstance(item, (list, tuple)):
             return type(item)(cls._hook(elem) for elem in item)

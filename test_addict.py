@@ -326,14 +326,16 @@ class Tests(unittest.TestCase):
         my_list[0] = 2
         self.assertEqual(my_list[0], test_dict['a'][0])
 
-    # def test_something(self):
-    #     another_test_dict = {'a': {'b': [1, 2, 3]}}
-    #     some_addict = Dict(another_test_dict, no_clone=True)
-    #     some_addict.b = 2
-    #
-    #     self.assertDictEqual(some_addict, another_test_dict)
-    #     print(some_addict)
+    def test_set_addict(self):
+        """
+        This test verifies that when a addict-instance is set to a
+        key, it is not cloned.
 
+        """
+        test_addict = Dict({'a': 2})
+        test_addict2 = Dict({'b': 3})
+        test_addict.b = test_addict2
+        self.assertTrue(test_addict.b is test_addict2)
 
 
 """
