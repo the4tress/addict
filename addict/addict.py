@@ -209,7 +209,7 @@ class Dict(dict):
        Recursively turn your addict Dicts into dicts.
 
        """
-       base = dict()
+       base = {}
        for key, value in self.items():
            if isinstance(value, type(self)):
                base[key] = value.to_dict()
