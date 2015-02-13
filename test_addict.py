@@ -358,10 +358,23 @@ class Tests(unittest.TestCase):
         # Assert that some_addict has not been cloned in prop
         self.assertTrue(some_addict is prop.item[-1])
 
-"""
-Allow for these test cases to be run from the command line
-via `python test_addict.py`
-"""
+    def test_not_clone_tuple(self):
+        """
+        Assert that tuples are not clones when set in a addict
+        instance.
+
+        """
+        some_tuple = (1, 2, {'a': 2})
+        prop = Dict()
+        prop.a = some_tuple
+
+        # Assert that some_tuple is reference from inside prop
+        self.assertTrue(prop.a is some_tuple)
+        # Assert that some_tuple[-1] is a dict, and not a addict
+        self.assertTrue(isinstance(some_tuple[-1], dict))
+        self.assertTrue(not isinstance(some_tuple[-1], Dict))
+
+
 if __name__ == '__main__':
     all_tests = unittest.TestLoader().loadTestsFromTestCase(Tests)
     unittest.TextTestRunner(verbosity=2).run(all_tests)

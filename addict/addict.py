@@ -81,16 +81,16 @@ class Dict(dict):
     @classmethod
     def _hook(cls, item):
         """
-        Called to ensure that each dict-instance that are being set
-        is a addict Dict. Recurses.
+
+        Ensure that each dict-instance that are being set
+        is a addict Dict. Lists are modified, while tuples are
+        left with potential dict instances inside.
 
         """
         if isinstance(item, Dict):
             return item
         elif isinstance(item, dict):
             return cls(item)
-        elif isinstance(item, tuple):
-            return type(item)(cls._hook(elem) for elem in item)
         elif isinstance(item, list):
             for i, elem in enumerate(item):
                 item[i] = cls._hook(elem)
