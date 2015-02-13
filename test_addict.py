@@ -312,6 +312,29 @@ class Tests(unittest.TestCase):
         self.assertIsInstance(regular['a'], tuple)
         self.assertNotIsInstance(regular['a'][0], Dict)
 
+    def test_no_clone(self):
+        """
+        Given a list, when it's put into a addict, we expect
+        it to not get cloned when addict is supplied with
+        the 'no_clone' keyword.
+
+        """
+        my_list = [1, {'b': 2}, 3]
+        test_dict = {'a': my_list}
+        prop = Dict(test_dict, no_clone=True)
+        self.assertTrue(my_list is test_dict['a'])
+        my_list[0] = 2
+        self.assertEqual(my_list[0], test_dict['a'][0])
+
+    # def test_something(self):
+    #     another_test_dict = {'a': {'b': [1, 2, 3]}}
+    #     some_addict = Dict(another_test_dict, no_clone=True)
+    #     some_addict.b = 2
+    #
+    #     self.assertDictEqual(some_addict, another_test_dict)
+    #     print(some_addict)
+
+
 
 """
 Allow for these test cases to be run from the command line

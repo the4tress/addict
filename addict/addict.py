@@ -1,6 +1,5 @@
 from inspect import isgenerator
 
-
 class Dict(dict):
     """
     Dict is a subclass of dict, which allows you to get AND SET(!!)
@@ -31,24 +30,30 @@ class Dict(dict):
     """
     def __init__(self, *args, **kwargs):
         """
-        If we're initialized with a dict, make sure we turn all the
-        subdicts into Dicts as well.
+        The default behaviour of addict is to recursively enter
+        all data structures supplied as arguments in this function,
+        and turn all dictionaries into addicts. If the 'no_clone'
+        keyword is supplied, we omit this behaviour, and do not
+        mutate whatever data that is passed to this function.
 
         """
-        for arg in args:
-            if not arg:
-                continue
-            elif isinstance(arg, dict):
-                for key, val in arg.items():
-                    self[key] = val
-            elif isinstance(arg, tuple) and (not isinstance(arg[0], tuple)):
-                self[arg[0]] = arg[1]
-            elif isinstance(arg, (list, tuple)) or isgenerator(arg):
-                for key, val in arg:
-                    self[key] = val
-            else:
-                raise TypeError("Dict does not understand "
-                                "{0} types".format(type(arg)))
+        if kwargs.pop('no_clone', False):
+            super(Dict, self).__init__(*args, **kwargs)
+        else:
+            for arg in args:
+                if not arg:
+                    continue
+                elif isinstance(arg, dict):
+                    for key, val in arg.items():
+                        self[key] = val
+                elif isinstance(arg, tuple) and (not isinstance(arg[0], tuple)):
+                    self[arg[0]] = arg[1]
+                elif isinstance(arg, (list, tuple)) or isgenerator(arg):
+                    for key, val in arg:
+                        self[key] = val
+                else:
+                    raise TypeError("Dict does not understand "
+                                    "{0} types".format(type(arg)))
 
         for key, val in kwargs.items():
             self[key] = val
@@ -205,9 +210,8 @@ class Dict(dict):
                base[key] = value.to_dict()
            elif isinstance(value, (list, tuple)):
                base[key] = type(value)(
-                item.to_dict() if isinstance(item, type(self)) else 
+                item.to_dict() if isinstance(item, type(self)) else
                 item for item in value)
            else:
                base[key] = value
        return base
-
