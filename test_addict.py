@@ -337,6 +337,26 @@ class Tests(unittest.TestCase):
         test_addict.b = test_addict2
         self.assertTrue(test_addict.b is test_addict2)
 
+    def test_not_clone_list(self):
+        """
+        Verify that a list is not cloned, but its elements that are
+        dictionaries are being turned into addict-instances.
+
+        """
+        prop = Dict()
+        some_addict = Dict({'b': 3})
+        a_list = [{'a': 1}, 2, some_addict]
+        prop.item = a_list
+
+        # The reference to the list is kept
+        self.assertTrue(a_list == prop.item)
+
+        # Assert that the item in a_list is the one in the Dict
+        self.assertTrue(a_list[0] is prop.item[0])
+        # Assert that the first item is an addict-instance
+        self.assertTrue(isinstance(prop.item[0], Dict))
+        # Assert that some_addict has not been cloned in prop
+        self.assertTrue(some_addict is prop.item[-1])
 
 """
 Allow for these test cases to be run from the command line

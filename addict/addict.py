@@ -89,8 +89,11 @@ class Dict(dict):
             return item
         elif isinstance(item, dict):
             return cls(item)
-        elif isinstance(item, (list, tuple)):
+        elif isinstance(item, tuple):
             return type(item)(cls._hook(elem) for elem in item)
+        elif isinstance(item, list):
+            for i, elem in enumerate(item):
+                item[i] = cls._hook(elem)
         return item
 
     def __getattr__(self, item):
