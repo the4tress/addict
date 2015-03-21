@@ -345,7 +345,12 @@ class Dict(dict):
                 }
         '''
 
-        # Error checking for kwargs
+        # Error checking
+        if len(args) < 2:
+            raise ValueError("extend() requires at least 2 dictionaries. %i provided." % len(args))
+        for arg in args:
+            if type(arg) != dict and isinstance(arg, type(self)) is False:
+                raise ValueError("extend() only accepts dictionaries.")
         # deep must be True or False if it is defined
         if 'deep' in kwargs and type(kwargs['deep']) != bool:
             raise TypeError("'deep' expects a boolean.")
