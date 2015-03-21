@@ -358,15 +358,17 @@ class Dict(dict):
         first_iter = False if 'first_iter' in kwargs else True
 
         # For each arg in args, convert arg to dict if arg is Dict()
-        [ arg.to_dict() if isinstance(arg, type(self)) else arg for arg in args ]
+        args = [ arg.to_dict() if isinstance(arg, type(self)) else arg for arg in args ]
 
         extended = None
 
         for arg in args:
             # Reset extended if the types don't match.
             # This prevents extending a dict over a list.
-            extended = None if extended != None and type(extended) != type(arg) else extended
+            if extended != None and type(extended) != type(arg):
+                extended = None
 
+            # Convert Dict() to dict
             if isinstance(arg, Dict):
                 arg.to_dict()
 
