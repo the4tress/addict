@@ -240,3 +240,180 @@ class Dict(dict):
                 self[k] = v
             else:
                 self[k].update(v)
+
+    def extend(self, *args, **kwargs):
+        '''
+            Python version of jQuery's $.extend().
+
+            Merges the contents of two or more dicts together into the first dict.
+
+            kwarg options:
+                deep            True/False
+                list_action    ['replace', 'append', 'ammend']
+                    default is 'replace'
+
+            NOTE: I can't figure out how to update an object. As you can see in
+                the examples I always say e = e.extend() instead of just e.extend()
+
+            Examples:
+                defaults = Dict()
+                defaults.tier_1_1.teir_2_0 = False
+                defaults.tier_1_1.teir_2_1 = 1
+                defaults.tier_1_1.teir_2_2 = 'a string'
+                defaults.tier_1_1.teir_2_3 = ['this', 'is', 'DEEP']
+                defaults.tier_1_2 = ['a', 'b', 'c']
+                # Dictionary verison
+                # defaults = {
+                #     'tier_1_1': {
+                #         'tier_2_0': False,
+                #         'tier_2_1': 1,
+                #         'tier_2_2': 'a string',
+                #         'tier_2_3': ['this', 'is', 'DEEP']
+                #     },
+                #     'tier_1_2': ['a', 'b', 'c']
+                # }
+
+                params = Dict()
+                params.tier_1_0 = 'another string'
+                params.tier_1_1.tier_2_0 = True
+                params.tier_1_1.tier_2_1 = 234234
+                params.tier_1_1.tier_2_4.tier_3_0 = 'really deep dict'
+                params.tier_1_2 = ['d', 'e']
+                # Dictionary verison
+                # params = {
+                #     'tier_1_0': 'another string',
+                #     'tier_1_1': {
+                #         'tier_2_0': True,
+                #         'tier_2_1': 234234,
+                #         'tier_2_4': {
+                #             'tier_3_0': 'really deep dict'
+                #         }
+                #     },
+                #     'tier_1_2': ['d', 'e']
+                # }
+
+                e = Dict()
+                # Extend just the first tier. I think this is pretty much the same
+                #   as your update(), except I also have the list actions (which
+                #   may or may not be valuable.)
+                e = e.extend(defaults, params)
+                OUTPUT
+                    {
+                        "tier_1_1": {
+                            "tier_2_1-int": 234234,
+                            "tier_2_0-bool": true,
+                            "tier_2_4-dict": {
+                                "tier_3_0": "deep dict"
+                            }
+                        },
+                        "tier_1_0": "another string",
+                        "tier_1_2": ["d", "e"]
+                    }
+
+                # Extend deep and append any intersecting lists
+                e = e.extend(defaults, params, deep=True, list_action="append")
+                OUTPUT
+                    {
+                        "tier_1_1": {
+                            "tier_2_2-str": "a string",
+                            "tier_2_1-int": 234234,
+                            "tier_2_0-bool": true,
+                            "tier_2_4-dict": {
+                                "tier_3_0": "deep dict"
+                            },
+                            "tier_2_3-list": ["this", "is", "DEEP"]
+                        },
+                        "tier_1_0": "another string",
+                        "tier_1_2": ["a", "b", "c", "d", "e"]
+                    }
+
+                # Extend deep and ammend any intersecting lists
+                e = e.extend(defaults, params, deep=True, list_action="ammend")
+                OUTPUT
+                {
+                    "tier_1_1": {
+                        "tier_2_2-str": "a string",
+                        "tier_2_1-int": 234234,
+                        "tier_2_0-bool": true,
+                        "tier_2_4-dict": {
+                            "tier_3_0": "deep dict"
+                        },
+                        "tier_2_3-list": ["this", "is", "DEEP"]
+                    },
+                    "tier_1_0": "another string",
+                    "tier_1_2": ["d", "e", "c"]
+                }
+        '''
+
+        # Error checking for kwargs
+        # deep must be True or False if it is defined
+        if 'deep' in kwargs and type(kwargs['deep']) != bool:
+            raise TypeError("'deep' expects a boolean.")
+        if 'list_action' in kwargs and kwargs['list_action'] not in ['replace', 'append', 'ammend']:
+            raise ValueError("'list_action' must be one of the following: 'replace', 'append', 'ammend'")
+
+        # Define defaults for optional params
+        deep = kwargs['deep'] if 'deep' in kwargs else False
+        list_action = 'replace' if 'list_action' not in kwargs else kwargs['list_action']
+        first_iter = False if 'first_iter' in kwargs else True
+
+        # For each arg in args, convert arg to dict if arg is Dict()
+        [ arg.to_dict() if isinstance(arg, type(self)) else arg for arg in args ]
+
+        extended = None
+
+        for arg in args:
+            # Reset extended if the types don't match.
+            # This prevents extending a dict over a list.
+            extended = None if extended != None and type(extended) != type(arg) else extended
+
+            if isinstance(arg, Dict):
+                arg.to_dict()
+
+            if isinstance(arg, dict):
+                if extended == None:
+                    extended = {}
+
+                for item in arg:
+                    if deep:
+                        # Recursion
+                        kwargs['first_iter'] = False
+                        extended[item] = arg[item] if item not in extended else self.extend(extended[item], arg[item], **kwargs)
+                    else:
+                        extended[item] = arg[item]
+
+            elif isinstance(arg, (list, tuple)):
+                is_tuple = False
+                # If its a tuple, convert it to a list
+                if type(arg) == tuple:
+                    arg = [a for a in arg]
+                    is_tuple = True
+
+                if extended == None:
+                    extended = []
+
+                if list_action == 'append':
+                    for item in arg:
+                        extended.append(item)
+
+                elif list_action == 'ammend':
+                    for idx, item in enumerate(arg):
+                        if deep:
+                            # Recursion
+                            kwargs['first_iter'] = False
+                            extended = self.extend([a for a in arg] + [e for e in extended[len(arg) - len(extended):]], **kwargs) if len(extended) > len(arg) else arg
+                        else:
+                            extended = [a for a in arg] + [e for e in extended[len(arg) - len(extended):]] if len(extended) > len(arg) else arg
+                else:
+                    extended = arg
+
+                # If it started out as a tuple, convert it back to tuple
+                if is_tuple:
+                    arg = tuple(a for a in arg)
+
+            # str, int, float, long, complex, bool, etc...
+            else:
+                extended = arg
+
+        return Dict(extended) if first_iter is True else extended
+
